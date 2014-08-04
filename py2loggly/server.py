@@ -39,7 +39,7 @@ class Server(object):
         self.tcp_server = StreamServer('%s:%s' % (bind_ip, tcp_port), self.tcp_handle)
         logging.info('Listening on %s (udp=%s tcp=%s) sending to %s.', bind_ip, udp_port, tcp_port, '')
 
-    def obj_to_loggly(self, obj):
+    def send_obj(self, obj):
         record = logging.makeLogRecord(obj)
         payload = self.formatter.format(record)
         logger.debug('message %s', payload)
@@ -52,7 +52,7 @@ class Server(object):
         except EOFError:
             logging.error('UDP: invalid data to pickle %s', chunk)
             return
-        self.obj_to_loggly(obj)
+        self.send_obj(obj)
 
     def tcp_handle(self, socket, address):
         fileobj = socket.makefile()
@@ -70,7 +70,7 @@ class Server(object):
             except EOFError:
                 logging.error('TCP: invalid data to pickle %s', chunk)
                 break
-            self.obj_to_loggly(obj)
+            self.send_obj(obj)
 
     def start(self):
         self.udp_server.start()
