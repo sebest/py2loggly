@@ -79,7 +79,7 @@ class JSONFormatter(logging.Formatter):
         else:
             return bytes(json.dumps(message), 'utf-8')
 
-    def format(self, record):
+    def format(self, record, serialize=True):
         # Create message dict
         message = {
             'timestamp': self.format_timestamp(record.created),
@@ -87,7 +87,7 @@ class JSONFormatter(logging.Formatter):
             'host': self.host,
             'path': record.pathname,
             'tags': self.tags[:],
-            'levelname': record.levelname,
+            'severity': record.levelname,
             'logger': record.name,
         }
 
@@ -102,4 +102,6 @@ class JSONFormatter(logging.Formatter):
         if record.exc_info or record.exc_text:
             message.update(self.get_debug_fields(record))
 
-        return self.serialize(message)
+        if serialize:
+            return self.serialize(message)
+        return message

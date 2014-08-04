@@ -3,6 +3,8 @@
 
 from gevent import monkey; monkey.patch_all()
 
+import sys
+import urllib2
 import cPickle
 import struct
 import logging
@@ -11,6 +13,10 @@ import _socket
 import gevent
 from gevent.server import DatagramServer, StreamServer
 from gevent.socket import EWOULDBLOCK
+try:
+    import simplejson as json
+except ImportError:
+    import json
 
 from . import formatter
 
@@ -33,7 +39,8 @@ class DatagramServer(DatagramServer):
 
 class Server(object):
 
-    def __init__(self, bind_ip='127.0.0.1', tcp_port=DEFAULT_TCP, udp_port=DEFAULT_UDP, fqdn=True, hostname=None, tags=None):
+    def __init__(self, loggly_token, bind_ip='127.0.0.1', tcp_port=DEFAULT_TCP, udp_port=DEFAULT_UDP, fqdn=True, hostname=None, tags=None):
+        self.loggly_token = loggly_token
         self.formatter = formatter.JSONFormatter(tags, hostname, fqdn)
         self.udp_server = DatagramServer('%s:%s' % (bind_ip, udp_port), self.udp_handle)
         self.tcp_server = StreamServer('%s:%s' % (bind_ip, tcp_port), self.tcp_handle)
@@ -41,8 +48,17 @@ class Server(object):
 
     def send_obj(self, obj):
         record = logging.makeLogRecord(obj)
-        payload = self.formatter.format(record)
-        logger.debug('message %s', payload)
+        data = self.formatter.format(record, serialize=False)
+
+        if sys.version_info < (3, 0):
+            payload = json.dumps(data)
+        else:
+            payload = bytes(json.dumps(data), 'utf-8')
+
+        log_data = "PLAINTEXT=" + urllib2.quote(payload)
+        url = "https://logs-01.loggly.com/inputs/%s/tag/%s/" % (self.loggly_token, ','.join(data.pop('tags', [])))
+        #logger.debug('message %s\n%s', url, payload)
+        urllib2.urlopen(url, log_data)
 
     def udp_handle(self, data, address):
         slen = struct.unpack('>L', data[:4])[0]
