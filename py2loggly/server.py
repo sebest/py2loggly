@@ -13,6 +13,7 @@ import _socket
 import gevent
 from gevent.server import DatagramServer, StreamServer
 from gevent.socket import EWOULDBLOCK
+from gevent.queue import Queue
 try:
     import simplejson as json
 except ImportError:
@@ -44,22 +45,38 @@ class Server(object):
         self.formatter = formatter.JSONFormatter(tags, hostname, fqdn)
         self.udp_server = DatagramServer('%s:%s' % (bind_ip, udp_port), self.udp_handle)
         self.tcp_server = StreamServer('%s:%s' % (bind_ip, tcp_port), self.tcp_handle)
+
+        self.queue = Queue()
+
+        [gevent.spawn(self.sender) for i in range(100)]
+
         logging.info('Listening on %s (udp=%s tcp=%s) sending to %s.', bind_ip, udp_port, tcp_port, '')
 
-    def send_obj(self, obj):
-        record = logging.makeLogRecord(obj)
-        data = self.formatter.format(record, serialize=False)
-        tags = data.pop('tags', [])
+    def sender(self):
+        while True:
+            obj = self.queue.get()
+            qsize = self.queue.qsize()
+            if qsize > 100 and qsize % 100 == 0:
+                logger.error("Queue has over %d messages", qsize)
+            record = logging.makeLogRecord(obj)
+            data = self.formatter.format(record, serialize=False)
+            tags = data.pop('tags', [])
 
-        if sys.version_info < (3, 0):
-            payload = json.dumps(data)
-        else:
-            payload = bytes(json.dumps(data), 'utf-8')
+            if sys.version_info < (3, 0):
+                payload = json.dumps(data)
+            else:
+                payload = bytes(json.dumps(data), 'utf-8')
 
-        log_data = "PLAINTEXT=" + urllib2.quote(payload)
-        url = "https://logs-01.loggly.com/inputs/%s/tag/%s/" % (self.loggly_token, ','.join(tags))
-        #logger.debug('message %s\n%s', url, payload)
-        urllib2.urlopen(url, log_data)
+            log_data = "PLAINTEXT=" + urllib2.quote(payload)
+            url = "http://logs-01.loggly.com/inputs/%s/tag/%s/" % (self.loggly_token, ','.join(tags))
+
+            while True:
+                try:
+                    urllib2.urlopen(url, log_data)
+                except Exception as exc:
+                    logging.error('Can\'t send message to %s: %s', url, exc)
+                    gevent.sleep(5)
+                    continue
 
     def udp_handle(self, data, address):
         slen = struct.unpack('>L', data[:4])[0]
@@ -69,7 +86,7 @@ class Server(object):
         except EOFError:
             logging.error('UDP: invalid data to pickle %s', chunk)
             return
-        gevent.spawn(self.send_obj, obj)
+        self.queue.put_nowait(obj)
 
     def tcp_handle(self, socket, address):
         fileobj = socket.makefile()
@@ -87,7 +104,7 @@ class Server(object):
             except EOFError:
                 logging.error('TCP: invalid data to pickle %s', chunk)
                 break
-            self.send_obj(obj)
+            self.queue.put_nowait(obj)
 
     def start(self):
         self.udp_server.start()
