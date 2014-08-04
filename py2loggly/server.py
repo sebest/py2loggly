@@ -73,6 +73,7 @@ class Server(object):
             while True:
                 try:
                     urllib2.urlopen(url, log_data)
+                    break
                 except Exception as exc:
                     logging.error('Can\'t send message to %s: %s', url, exc)
                     gevent.sleep(5)
