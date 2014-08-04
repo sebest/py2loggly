@@ -49,6 +49,7 @@ class Server(object):
     def send_obj(self, obj):
         record = logging.makeLogRecord(obj)
         data = self.formatter.format(record, serialize=False)
+        tags = data.pop('tags', [])
 
         if sys.version_info < (3, 0):
             payload = json.dumps(data)
@@ -56,7 +57,7 @@ class Server(object):
             payload = bytes(json.dumps(data), 'utf-8')
 
         log_data = "PLAINTEXT=" + urllib2.quote(payload)
-        url = "https://logs-01.loggly.com/inputs/%s/tag/%s/" % (self.loggly_token, ','.join(data.pop('tags', [])))
+        url = "https://logs-01.loggly.com/inputs/%s/tag/%s/" % (self.loggly_token, ','.join(tags))
         #logger.debug('message %s\n%s', url, payload)
         urllib2.urlopen(url, log_data)
 
@@ -68,7 +69,7 @@ class Server(object):
         except EOFError:
             logging.error('UDP: invalid data to pickle %s', chunk)
             return
-        self.send_obj(obj)
+        gevent.spawn(self.send_obj, obj)
 
     def tcp_handle(self, socket, address):
         fileobj = socket.makefile()
