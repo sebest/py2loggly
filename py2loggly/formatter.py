@@ -87,7 +87,7 @@ class JSONFormatter(logging.Formatter):
             'host': self.host,
             'path': record.pathname,
             'tags': self.tags[:],
-            'severity': record.levelname,
+            'level': record.levelname,
             'logger': record.name,
         }
 
