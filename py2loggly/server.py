@@ -50,7 +50,7 @@ class Server(object):
 
         [gevent.spawn(self.sender) for i in range(100)]
 
-        logging.info('Listening on %s (udp=%s tcp=%s) sending to %s.', bind_ip, udp_port, tcp_port, '')
+        logging.info('Listening on %s (udp=%s tcp=%s).', bind_ip, udp_port, tcp_port)
 
     def sender(self):
         while True:
