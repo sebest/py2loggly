@@ -62,7 +62,7 @@ class JSONFormatter(logging.Formatter):
             'exc_info': exc_info,
             'filename': record.filename,
             'lineno': record.lineno,
-            }
+        }
 
     @classmethod
     def format_timestamp(cls, time):

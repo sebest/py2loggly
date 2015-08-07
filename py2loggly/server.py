@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from gevent import monkey; monkey.patch_all()
+from gevent import monkey
+monkey.patch_all()
 
 import sys
 import struct
@@ -32,6 +33,7 @@ DEFAULT_TCP = logging.handlers.DEFAULT_TCP_LOGGING_PORT
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+
 class DatagramServer(DatagramServer):
 
     def do_read(self):
@@ -42,6 +44,7 @@ class DatagramServer(DatagramServer):
                 return
             raise
         return data, address
+
 
 class Server(object):
 
