@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from gevent import monkey; monkey.patch_all()
+from gevent import monkey
+monkey.patch_all()
 
 import sys
-import urllib2
-import cPickle
 import struct
 import logging
 import logging.handlers
@@ -14,6 +13,13 @@ import gevent
 from gevent.server import DatagramServer, StreamServer
 from gevent.socket import EWOULDBLOCK
 from gevent.queue import Queue
+try:
+    from urllib.request import urlopen
+    from urllib.parse import quote
+    import pickle
+except ImportError:
+    from urllib2 import urlopen, quote
+    import cPickle as pickle
 try:
     import simplejson as json
 except ImportError:
@@ -27,6 +33,7 @@ DEFAULT_TCP = logging.handlers.DEFAULT_TCP_LOGGING_PORT
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+
 class DatagramServer(DatagramServer):
 
     def do_read(self):
@@ -37,6 +44,7 @@ class DatagramServer(DatagramServer):
                 return
             raise
         return data, address
+
 
 class Server(object):
 
@@ -67,12 +75,12 @@ class Server(object):
             else:
                 payload = bytes(json.dumps(data), 'utf-8')
 
-            log_data = "PLAINTEXT=" + urllib2.quote(payload)
+            log_data = "PLAINTEXT=" + quote(payload)
             url = "http://logs-01.loggly.com/inputs/%s/tag/%s/" % (self.loggly_token, ','.join(tags))
 
             while True:
                 try:
-                    urllib2.urlopen(url, log_data)
+                    urlopen(url, log_data)
                     break
                 except Exception as exc:
                     logging.error('Can\'t send message to %s: %s', url, exc)
@@ -83,7 +91,7 @@ class Server(object):
         slen = struct.unpack('>L', data[:4])[0]
         chunk = data[4:slen+4]
         try:
-            obj = cPickle.loads(chunk)
+            obj = pickle.loads(chunk)
         except EOFError:
             logging.error('UDP: invalid data to pickle %s', chunk)
             return
@@ -101,7 +109,7 @@ class Server(object):
                 chunk = chunk + fileobj.read(slen - len(chunk))
             fileobj.flush()
             try:
-                obj = cPickle.loads(chunk)
+                obj = pickle.loads(chunk)
             except EOFError:
                 logging.error('TCP: invalid data to pickle %s', chunk)
                 break
