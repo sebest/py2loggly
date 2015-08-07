@@ -4,7 +4,6 @@
 from gevent import monkey; monkey.patch_all()
 
 import sys
-import urllib2
 import cPickle
 import struct
 import logging
@@ -14,6 +13,11 @@ import gevent
 from gevent.server import DatagramServer, StreamServer
 from gevent.socket import EWOULDBLOCK
 from gevent.queue import Queue
+try:
+    from urllib.request import urlopen
+    from urllib.parse import quote
+except ImportError:
+    from urllib2 import urlopen, quote
 try:
     import simplejson as json
 except ImportError:
@@ -67,12 +71,12 @@ class Server(object):
             else:
                 payload = bytes(json.dumps(data), 'utf-8')
 
-            log_data = "PLAINTEXT=" + urllib2.quote(payload)
+            log_data = "PLAINTEXT=" + quote(payload)
             url = "http://logs-01.loggly.com/inputs/%s/tag/%s/" % (self.loggly_token, ','.join(tags))
 
             while True:
                 try:
-                    urllib2.urlopen(url, log_data)
+                    urlopen(url, log_data)
                     break
                 except Exception as exc:
                     logging.error('Can\'t send message to %s: %s', url, exc)
