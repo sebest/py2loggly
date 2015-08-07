@@ -4,7 +4,6 @@
 from gevent import monkey; monkey.patch_all()
 
 import sys
-import cPickle
 import struct
 import logging
 import logging.handlers
@@ -16,8 +15,10 @@ from gevent.queue import Queue
 try:
     from urllib.request import urlopen
     from urllib.parse import quote
+    import pickle
 except ImportError:
     from urllib2 import urlopen, quote
+    import cPickle as pickle
 try:
     import simplejson as json
 except ImportError:
@@ -87,7 +88,7 @@ class Server(object):
         slen = struct.unpack('>L', data[:4])[0]
         chunk = data[4:slen+4]
         try:
-            obj = cPickle.loads(chunk)
+            obj = pickle.loads(chunk)
         except EOFError:
             logging.error('UDP: invalid data to pickle %s', chunk)
             return
@@ -105,7 +106,7 @@ class Server(object):
                 chunk = chunk + fileobj.read(slen - len(chunk))
             fileobj.flush()
             try:
-                obj = cPickle.loads(chunk)
+                obj = pickle.loads(chunk)
             except EOFError:
                 logging.error('TCP: invalid data to pickle %s', chunk)
                 break
