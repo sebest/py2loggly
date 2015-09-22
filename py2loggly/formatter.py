@@ -74,10 +74,7 @@ class JSONFormatter(logging.Formatter):
 
     @classmethod
     def serialize(cls, message):
-        if sys.version_info < (3, 0):
-            return json.dumps(message)
-        else:
-            return bytes(json.dumps(message), 'utf-8')
+        return json.dumps(message)
 
     def format(self, record, serialize=True):
         # Create message dict
