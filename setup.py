@@ -13,7 +13,7 @@ if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
-readme = open('README.md').read()
+readme = open('README.rst').read()
 
 setup(
     name='py2loggly',
@@ -44,8 +44,6 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
     ],
-    setup_requires=['setuptools-markdown'],
-    long_description_markdown_filename='README.md',
     test_suite='tests',
     entry_points = {
         'console_scripts': [
