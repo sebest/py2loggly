@@ -6,10 +6,8 @@ import sys
 
 from py2loggly import __version__, __email__, __author__
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+from setuptools import setup
+
 
 if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
@@ -33,20 +31,21 @@ setup(
     install_requires=[
         'gevent',
     ],
-    license="BSD",
+    license="MIT",
     zip_safe=False,
-    keywords='loggly',
+    keywords=['loggly', 'logging'],
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
-        'Intended Audience :: Developers',
-        'License :: OSI Approved :: BSD License',
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
         "Programming Language :: Python :: 2",
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
     ],
+    setup_requires=['setuptools-markdown'],
+    long_description_markdown_filename='README.md',
     test_suite='tests',
     entry_points = {
         'console_scripts': [
