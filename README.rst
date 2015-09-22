@@ -1,5 +1,5 @@
-Py2Loggly
-=========
+Py2Loggly |PyPi version|
+========================
 
 Py2Loggly is a proxy server listening on UDP and TCP for messages coming
 from python's UDP/TCP logging handler, it will forward all these
@@ -101,3 +101,6 @@ License
 -------
 
 MIT
+
+.. |PyPi version| image:: https://img.shields.io/pypi/v/py2loggly.svg
+    :target: https://pypi.python.org/pypi/py2loggly/
