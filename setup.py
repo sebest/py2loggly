@@ -15,14 +15,13 @@ if sys.argv[-1] == 'publish':
     os.system('python setup.py sdist upload')
     sys.exit()
 
-readme = open('README.rst').read()
-history = open('HISTORY.rst').read().replace('.. :changelog:', '')
+readme = open('README.md').read()
 
 setup(
     name='py2loggly',
     version=__version__,
     description='A proxy for python UDP/TCP logging to loggly',
-    long_description=readme + '\n\n' + history,
+    long_description=readme,
     author=__author__,
     author_email=__email__,
     url='https://github.com/sebest/py2loggly',
