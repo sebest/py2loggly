@@ -13,7 +13,13 @@ py2loggly only depends on `gevent`
 
 ### Install py2loggly
 
+From sources
+
     $ python setup.py install
+
+From Pypi
+
+    $ pip install py2loggly
 
 Usage
 -----
